@@ -2,8 +2,20 @@ import axios from 'axios';
 import { getBaseURL } from './utils';
 import { bigIntJSON } from './bigIntJSON';
 
+const getQdrantBaseURL = () => {
+  // Приоритет: переменная окружения VITE_QDRANT_URL
+  if (import.meta.env.VITE_QDRANT_URL) {
+    return import.meta.env.VITE_QDRANT_URL;
+  }
+  // Иначе используем стандартную логику
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:6333';
+  }
+  return getBaseURL();
+};
+
 export const axiosInstance = axios.create({
-  baseURL: process.env.NODE_ENV === 'development' ? 'http://localhost:6333' : getBaseURL(),
+  baseURL: getQdrantBaseURL(),
   transformRequest: [
     function (data, headers) {
       if (data instanceof FormData) {
@@ -22,11 +34,7 @@ export const axiosInstance = axios.create({
 });
 
 export function setupAxios(axios, { apiKey }) {
-  if (process.env.NODE_ENV === 'development') {
-    axios.defaults.baseURL = 'http://localhost:6333';
-  } else {
-    axios.defaults.baseURL = getBaseURL();
-  }
+  axios.defaults.baseURL = getQdrantBaseURL();
   if (apiKey) {
     axios.defaults.headers.common['api-key'] = apiKey;
   }

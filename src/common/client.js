@@ -85,7 +85,22 @@ export class QdrantClientExtended extends QdrantClient {
 export default function qdrantClient({ apiKey }) {
   let url;
   let port = 6333;
-  if (process.env.NODE_ENV === 'development') {
+  
+  // Приоритет: переменная окружения VITE_QDRANT_URL
+  if (import.meta.env.VITE_QDRANT_URL) {
+    url = import.meta.env.VITE_QDRANT_URL;
+    // Пытаемся извлечь порт из URL, если он указан
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.port) {
+        port = parseInt(urlObj.port, 10);
+      } else {
+        port = urlObj.protocol === 'https:' ? 443 : 80;
+      }
+    } catch (e) {
+      // Если не удалось распарсить URL, используем значения по умолчанию
+    }
+  } else if (process.env.NODE_ENV === 'development') {
     url = 'http://localhost:6333';
   } else {
     url = getBaseURL();
